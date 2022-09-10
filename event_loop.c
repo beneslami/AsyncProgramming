@@ -97,7 +97,29 @@ static void event_loop_remove_task_from_task_array(event_loop_t *el, task_t *tas
     task->left = 0;
     task->right = 0;
 }
-void event_loop_run(event_loop_t *el){
+
+static void event_loop_schedule_task(event_loop_t *el, task_t *task){
+    pthread_mutex_lock(&el->ev_loop_mutex);
+    event_loop_add_task_in_task_array(el, task);
+    if(el->ev_loop_state == EV_LOOP_BUSY){
+        pthread_mutex_unlock(&el->ev_loop_mutex);
+        return;
+    }
+    pthread_cond_signal(&el->ev_loop_cv);
+    pthread_mutex_unlock(&el->ev_loop_mutex);
+}
+
+task_t *task_create_new_job(event_loop_t *el, event_cbk cbk, void *arg){
+    task_t *task = (task_t*)calloc(1, sizeof(task_t));
+    task->cbk = cbk;
+    task->arg = arg;
+    task->left = NULL;
+    task->right = NULL;
+    event_loop_schedule_task(el, task);
+    return task;
+}
+
+voidevent_loop_run(event_loop_t *el){
     pthread_attr_t attr;
     assert(el->thread == NULL);
     el->thread = (pthread_t*)calloc(1, sizeof(pthread_t));
