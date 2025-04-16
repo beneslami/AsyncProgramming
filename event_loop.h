@@ -1,9 +1,17 @@
 
-#ifndef EVENT_LOOP
-#define EVENT_LOOP
+#ifndef __EVENT_LOOP_H__
+#define __EVENT_LOOP_H__
+
 #include <pthread.h>
 
-typedef void (*event_cbk)(void*);
+typedef enum EL_RES_ {
+    EL_CONTINUE,
+    EL_FINISH
+} EL_RES_T;
+
+
+typedef EL_RES_T (*event_cbk)(void*);
+
 typedef struct task_{
     event_cbk cbk;
     void *arg;
